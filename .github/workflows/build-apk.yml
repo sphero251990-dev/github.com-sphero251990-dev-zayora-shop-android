@@ -14,7 +14,17 @@ jobs:
       - name: Unzip project
         run: |
           unzip -q Zayora-Shop-Android-Project.zip -d project
-          find project -maxdepth 3 -type f | head -50
+
+      - name: Find Android project
+        run: |
+          GRADLEW=$(find project -name gradlew -type f | head -1)
+          if [ -z "$GRADLEW" ]; then
+            echo "gradlew was not found in the ZIP."
+            find project -maxdepth 4 -type f | head -100
+            exit 1
+          fi
+          echo "GRADLEW=$GRADLEW" >> "$GITHUB_ENV"
+          echo "PROJECT_DIR=$(dirname "$GRADLEW")" >> "$GITHUB_ENV"
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -23,8 +33,8 @@ jobs:
           java-version: '17'
 
       - name: Build APK
-        working-directory: project
         run: |
+          cd "$PROJECT_DIR"
           chmod +x gradlew
           ./gradlew assembleDebug
 
